@@ -1,7 +1,8 @@
 #Purpose
-This application is running on Google App Engine.<http://transatonce.appspot.com>  
+This application is running on Google App Engine. <http://transatonce.appspot.com>  
 You can translate many words in a textbox at once through alc.co.jp.  
-Each result will follow to shonw by calling back in jQuery load function.
+Each result will follow to show as it calls back function in jQuery's load.
+Background blinks in color each time the entry is retrieved.
 
 #Requirement
-You need Beautifulsoup and jQuery.
+Need Beautifulsoup and jQuery.
