@@ -51,7 +51,7 @@ class MainHandler(webapp2.RequestHandler):
 
 	  <form action="#" name=trans>
 	   <textarea name=text rows=5 cols=20" onChange="count()"></textarea><br>
-	   <input type=button value="Translate altogether" OnClick="makeEachQuery()">
+	   <input type=button name=input value="Translate altogether" OnClick="makeQuery()">
 	  </form>
 
 	  <div id=disp_parent></div>
@@ -68,19 +68,19 @@ class TransHandler(webapp2.RequestHandler):
 
 	def post(self):
 
-		words = self.request.get('words')
+		w = self.request.get('word')
+
+		if w == "":
+			self.response.out.write("")
 
 		delay=1
-		for w in words.split('\n'):
 
-			if w == "": continue 
+		while delay < 10:
 
 			ww = w.replace(" ","%20")
 			result = urlfetch.fetch("http://eow.alc.co.jp/"+ww+"/utf-8/")
 
 			if result.status_code==200:
-
-				delay=1
 
 				soup = BeautifulSoup(result.content)
 				divs = soup.find("div",id=re.compile("resultsList"))
@@ -90,26 +90,40 @@ class TransHandler(webapp2.RequestHandler):
 					div  = divs.find("div")
 
 				except:
-					self.response.out.write("<br><br><font size=5>"+\
-						 w.encode('utf-8')+\
-						 "</font><hr><br>")
-					continue
+					# To show word
+					self.response.out.write(
+							"<br><br><font size=5>"+\
+							w.encode('utf-8')+\
+							"</font><hr>No word matched.")
+
+					break
+
 				else:
-					self.response.out.write("<br><br><font size=5>"+\
-						 str(span).encode('utf-8')+\
-						 "</font><hr><br>")
+					# To show word
+					self.response.out.write(
+							"<br><br><font size=5>"+\
+							str(span).encode('utf-8')+\
+							"</font><hr><br>")
+
+					# To show translation
 					self.response.out.write(div)
-					#time.sleep(0.3)
 
-				finally:
-					pass
+					break
+
 			else:
+				pass
 
-				self.response.out.write("<br><br><font size=5>"+\
+			time.sleep(delay)
+			delay*=2
+
+		if delay < 10:
+			pass
+
+		else:
+			self.response.out.write(
+					"<br><br><font size=5>"+\
 					w.encode('utf-8')+\
-					"</font><hr><br>")
-				time.sleep(delay)
-				delay*=2
+					"</font><hr><br>Failed to retrieve...")
 
 
 app = webapp2.WSGIApplication([
