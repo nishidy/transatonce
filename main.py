@@ -46,12 +46,13 @@ class MainHandler(webapp2.RequestHandler):
 		cont = '''
 	  <font size=5>Translate through alc at once.</font><br><hr>
 	  You can translate many words through alc at once.<br>
+	  One line, one word or one phrase.<br>
 	  Each result will follow to show one by one under the button.<br>
 	  <br>
 
 	  <form action="#" name=trans>
 	   <textarea name=text rows=5 cols=20" onChange="count()"></textarea><br>
-	   <input type=button name=input value="Translate altogether" OnClick="makeQuery()">
+	   <input type=button name=input value="Translate" OnClick="makeQuery()">
 	  </form>
 
 	  <div id=disp_parent></div>
