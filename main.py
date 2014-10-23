@@ -44,8 +44,8 @@ class MainHandler(webapp2.RequestHandler):
 '''
 
 		cont = '''
-	  <font size=5>Translate through alc at once.</font><br><hr>
-	  You can translate many words through alc at once.<br>
+	  <font size=5>Translate through dictionary site at once.</font><br><hr>
+	  You can translate many words through dictionary site at once.<br>
 	  One line, one word or one phrase.<br>
 	  Each result will follow to show one by one under the button.<br>
 	  <br>
