@@ -53,6 +53,8 @@ class MainHandler(webapp2.RequestHandler):
 	  <form action="#" name=trans>
 	   <textarea name=text rows=5 cols=20" onChange="count()"></textarea><br>
 	   <input type=button name=input value="Translate" OnClick="makeQuery()">
+	   <input type=radio name=site value="alc" checked>alc
+	   <input type=radio name=site value="goo">goo
 	  </form>
 
 	  <div id=disp_parent></div>
@@ -69,28 +71,62 @@ class TransHandler(webapp2.RequestHandler):
 
 	def post(self):
 
-		w = self.request.get('word')
+		url = {}
+		url["alc"] = "http://eow.alc.co.jp/%s/utf-8/"
+		url["goo"] = "http://dictionary.goo.ne.jp/srch/ej/%s/m0u/"
 
-		if w == "":
+		regex = {}
+		regex["alc"] = "resultsList"
+		regex["goo"] = "allList"
+
+		def getdict(site,divs):
+
+			if site=="alc":
+				dictword = str(divs.find("span"))
+				dicttrans= divs.find("div")
+			elif site=="goo":
+				a=divs.find("dt").find("a")
+				dictword=a.string
+
+				href=a.get("href")
+				goourl='/'.join(url[site].split("/")[:3])
+				page=" <a href=\""+goourl+href+"\" target=\"_blank\">-></a>"
+				dicttrans=str(divs.find("dd").string)+page.encode('utf-8')
+
+			return dictword,dicttrans
+
+		def gettag(site,result):
+
+			soup = BeautifulSoup(result.content)
+
+			if site=="alc":
+				tag = soup.find("div",id=re.compile(regex[site]))
+			elif site=="goo":
+				tag = soup.find("dl",{"class":regex[site]})
+
+			return tag
+
+		w = self.request.get('word')
+		site = self.request.get('site')
+		if w == "" or site == "":
 			self.response.out.write("")
 
 		delay=1
-
 		while delay < 10:
 
-			ww = w.replace(" ","%20")
-			result = urlfetch.fetch("http://eow.alc.co.jp/"+ww+"/utf-8/")
+			wr = w.replace(" ","%20")
+			result = urlfetch.fetch(url[site]%wr)
 
 			if result.status_code==200:
 
-				soup = BeautifulSoup(result.content)
-				divs = soup.find("div",id=re.compile("resultsList"))
+				tag = gettag(site,result)
 
 				try:
-					span = divs.find("span")
-					div  = divs.find("div")
+					dictword,dicttrans = getdict(site,tag)
 
-				except:
+				except Exception as e:
+					logging.error(str(type(e))+"\n"+str(e.args)+"\n"+e.message)
+
 					# To show word
 					self.response.out.write(
 							"<br><br><font size=5>"+\
@@ -103,11 +139,11 @@ class TransHandler(webapp2.RequestHandler):
 					# To show word
 					self.response.out.write(
 							"<br><br><font size=5>"+\
-							str(span).encode('utf-8')+\
+							dictword.encode('utf-8')+\
 							"</font><hr><br>")
 
 					# To show translation
-					self.response.out.write(div)
+					self.response.out.write(dicttrans)
 
 					break
 

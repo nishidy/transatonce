@@ -31,7 +31,7 @@ function vanish(i,n){
 		return;
 	}
 	$("#"+id).css({opacity:n/10.0});
-	setTimeout(function(){vanish(i,n-1)},30);
+	setTimeout(function(){vanish(i,n-1)},50);
 }
 
 function notice(i,word){
@@ -44,9 +44,9 @@ function notice(i,word){
 	var prop = {
 		position: "absolute",
 		top : ($(window).scrollTop()+10)+"px",
-		left: (window.innerWidth*3/4)+"px",
+		left: (window.innerWidth*4/5)+"px",
 		border: "3px solid yellow",
-		padding: "10px",
+		padding: "8px",
 		backgroundColor:"#ffffcc",
 		fontWeight: "bold",
 	}
@@ -79,9 +79,17 @@ function query(i,num,field,artext){
 	new_div.id=tag_div;
 	field.appendChild(new_div);
 
+	var j;
+	for(j=0;j<document.forms['trans'].elements['site'].length;j++){
+		if(document.forms['trans'].elements['site'][j].checked){
+			site=document.forms['trans'].elements['site'][j].value;
+			break;
+		}
+	}
+
 	$('div#'+tag_div).load(
 			'/trans',
-			{word:artext[i]},
+			{word:artext[i],site:site},
 			function(responseText, status, XMLHttpRequest)
 			  {query(i+1,num,field,artext)}
 	);
