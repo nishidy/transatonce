@@ -43,10 +43,10 @@ function notice(i,word){
 
 	var prop = {
 		position: "absolute",
-		top : ($(window).scrollTop()+10)+"px",
+		top : ($(window).scrollTop()+15)+"px",
 		left: (window.innerWidth*4/5)+"px",
 		border: "3px solid yellow",
-		padding: "8px",
+		padding: "10px",
 		backgroundColor:"#ffffcc",
 		fontWeight: "bold",
 	}
@@ -55,7 +55,9 @@ function notice(i,word){
 	vanish(i,10);
 }
 
+
 function makeQuery(){
+
 	document.forms['trans'].elements['input'].disabled=true;
 	deleteElement("disp_parent");
 
@@ -67,8 +69,13 @@ function makeQuery(){
 }
 
 function query(i,num,field,artext){
+
 	//if(i>0) ripple(230,i%3);
-	if(i>0) notice(i,artext[i-1]);
+
+	if(document.forms['trans'].elements['notice'].checked){
+		if(i>0) notice(i,artext[i-1]);
+	}
+
 	if(i==num){
 		document.forms['trans'].elements['input'].disabled=false;
 		return;

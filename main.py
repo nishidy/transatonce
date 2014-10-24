@@ -37,6 +37,14 @@ class MainHandler(webapp2.RequestHandler):
 	  <title>transatonce</title>
 	  <script type='text/javascript' src='js/my.js'></script>
 	  <script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
+	  <script type='text/javascript'>
+	   document.onkeyup=function(e){
+		   if(e.keyCode==27){ // ESC:27
+			   deleteElement('disp_parent');
+	           document.trans.text.value="";
+		   }
+	   };
+	  </script>
 	  
 	 </head>
 
@@ -45,16 +53,15 @@ class MainHandler(webapp2.RequestHandler):
 
 		cont = '''
 	  <font size=5>Translate through dictionary site at once.</font><br><hr>
-	  You can translate many words through dictionary site at once.<br>
-	  One line, one word or one phrase.<br>
-	  Each result will follow to show one by one under the button.<br>
+	  Note : One line, one phrase. ESC will clear the text.<br>
 	  <br>
 
 	  <form action="#" name=trans>
 	   <textarea name=text rows=5 cols=20" onChange="count()"></textarea><br>
 	   <input type=button name=input value="Translate" OnClick="makeQuery()">
-	   <input type=radio name=site value="alc" checked>alc
-	   <input type=radio name=site value="goo">goo
+	   <input type=radio name=site value=alc checked>alc
+	   <input type=radio name=site value=goo>goo
+	   <input type=checkbox name=notice checked>notice
 	  </form>
 
 	  <div id=disp_parent></div>
