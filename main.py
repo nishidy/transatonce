@@ -117,6 +117,7 @@ class TransHandler(webapp2.RequestHandler):
 		site = self.request.get('site')
 		if w == "" or site == "":
 			self.response.out.write("")
+			return
 
 		delay=1
 		while delay < 10:
