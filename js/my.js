@@ -73,7 +73,9 @@ function query(i,num,field,artext){
 	//if(i>0) ripple(230,i%3);
 
 	if(document.forms['trans'].elements['notice'].checked){
-		if(i>0) notice(i,artext[i-1]);
+		if(i>0){
+			if(artext[i-1]!="") notice(i,artext[i-1]);
+		}
 	}
 
 	if(i==num){
