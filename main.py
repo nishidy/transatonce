@@ -35,7 +35,7 @@ class MainHandler(webapp2.RequestHandler):
 	<html>
 	 <head>
 	  <title>transatonce</title>
-	  <script type='text/javascript' src='js/my.min.js'></script>
+	  <script type='text/javascript' src='js/my.js'></script>
 	  <script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
 	  <script type='text/javascript'>
 	   document.onkeyup=function(e){
@@ -53,15 +53,18 @@ class MainHandler(webapp2.RequestHandler):
 
 		cont = '''
 	  <font size=5>Translate through dictionary site at once.</font><br><hr>
-	  Note : One line, one phrase. ESC will clear the text.<br>
+	  Note : One line, one phrase. ESC will clear all the text.<br>
 	  <br>
 
 	  <form action="#" name=trans>
 	   <textarea name=text rows=5 cols=20" onChange="count()"></textarea><br>
 	   <input type=button name=input value="Translate" OnClick="makeQuery()">
+	   <br>
 	   <input type=radio name=site value=alc checked>alc
 	   <input type=radio name=site value=goo>goo
 	   <input type=radio name=site value=longman>longman
+	   <br>
+	   <input type=checkbox name=append>append
 	   <input type=checkbox name=notice checked>notice
 	  </form>
 
@@ -148,20 +151,16 @@ class TransHandler(webapp2.RequestHandler):
 
 					if site=="longman" and delay==1:
 						w=w+"_1"
-						continue
 					else:
 						text="No word matched."
-
-					break
+						break
 
 				else:
 					text=dicttrans
 					break
 
-			else:
-
-				time.sleep(delay)
-				delay*=2
+			time.sleep(delay)
+			delay*=2
 
 		if delay >= 10:
 			text="Failed to retrieve."

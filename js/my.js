@@ -59,16 +59,21 @@ function notice(i,word){
 function makeQuery(){
 
 	document.forms['trans'].elements['input'].disabled=true;
-	deleteElement("disp_parent");
+
+	if( ! document.forms['trans'].elements['append'].checked ){
+		deleteElement("disp_parent");
+	}
 
 	var text = document.forms['trans'].elements['text'].value;
 	var artext = text.split('\n');
 	var field = document.getElementById('disp_parent');
 
-	query(0,artext.length,field,artext);
+	ncur = document.getElementById('disp_parent').childNodes.length;
+
+	query(0,artext,ncur);
 }
 
-function query(i,num,field,artext){
+function query(i,artext,ncur){
 
 	//if(i>0) ripple(230,i%3);
 
@@ -78,15 +83,16 @@ function query(i,num,field,artext){
 		}
 	}
 
-	if(i==num){
+	if(i==artext.length){
 		document.forms['trans'].elements['input'].disabled=false;
 		return;
 	}
 
-	tag_div = "disp_"+String(i);
+	tag_div = "disp_"+String(i+ncur);
 	new_div = document.createElement("div");
 	new_div.id=tag_div;
-	field.appendChild(new_div);
+
+	document.getElementById('disp_parent').appendChild(new_div);
 
 	var j;
 	for(j=0;j<document.forms['trans'].elements['site'].length;j++){
@@ -100,7 +106,7 @@ function query(i,num,field,artext){
 			'/trans',
 			{word:artext[i],site:site},
 			function(responseText, status, XMLHttpRequest)
-			  {query(i+1,num,field,artext)}
+			  {query(i+1,artext,ncur)}
 	);
 }
 
