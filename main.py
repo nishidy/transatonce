@@ -35,7 +35,7 @@ class MainHandler(webapp2.RequestHandler):
 	<html>
 	 <head>
 	  <title>transatonce</title>
-	  <script type='text/javascript' src='js/my.js'></script>
+	  <script type='text/javascript' src='js/my.min.js'></script>
 	  <script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
 	  <script type='text/javascript'>
 	   document.onkeyup=function(e){
@@ -61,6 +61,7 @@ class MainHandler(webapp2.RequestHandler):
 	   <input type=button name=input value="Translate" OnClick="makeQuery()">
 	   <input type=radio name=site value=alc checked>alc
 	   <input type=radio name=site value=goo>goo
+	   <input type=radio name=site value=longman>longman
 	   <input type=checkbox name=notice checked>notice
 	  </form>
 
@@ -81,43 +82,53 @@ class TransHandler(webapp2.RequestHandler):
 		url = {}
 		url["alc"] = "http://eow.alc.co.jp/%s/utf-8/"
 		url["goo"] = "http://dictionary.goo.ne.jp/srch/ej/%s/m0u/"
+		url["longman"]="http://www.ldoceonline.com/dictionary/%s"
 
 		regex = {}
-		regex["alc"] = "resultsList"
-		regex["goo"] = "allList"
+		regex["alc"] = {"id":"resultsList"}
+		regex["goo"] = {"class":"allList"}
+		regex["longman"] = {"class":"Entry"}
 
 		def getdict(site,divs):
 
 			if site=="alc":
-				dictword = str(divs.find("span"))
 				dicttrans= divs.find("div")
+
 			elif site=="goo":
 				a=divs.find("dt").find("a")
-				dictword=a.string
-
 				href=a.get("href")
 				goourl='/'.join(url[site].split("/")[:3])
 				page=" <a href=\""+goourl+href+"\" target=\"_blank\">-></a>"
 				dicttrans=str(divs.find("dd").string)+page.encode('utf-8')
 
-			return dictword,dicttrans
+			elif site=="longman":
+				div=str(divs.find("div",{"class":"Sense"}))
+				dicttrans=div.replace("src=\"","src=\""+'/'.join(url[site].split("/")[:3]))
+				
+				pass
+
+			return dicttrans
 
 		def gettag(site,result):
 
 			soup = BeautifulSoup(result.content)
-
 			if site=="alc":
-				tag = soup.find("div",id=re.compile(regex[site]))
+				tag = soup.find("div",regex[site])
 			elif site=="goo":
-				tag = soup.find("dl",{"class":regex[site]})
+				tag = soup.find("dl",regex[site])
+			elif site=="longman":
+				tag = soup.find("div",regex[site])
 
 			return tag
+
 
 		w = self.request.get('word')
 		site = self.request.get('site')
 		if w == "" or site == "":
 			self.response.out.write("")
 			return
+
+		ws = w
 
 		delay=1
 		while delay < 10:
@@ -130,45 +141,37 @@ class TransHandler(webapp2.RequestHandler):
 				tag = gettag(site,result)
 
 				try:
-					dictword,dicttrans = getdict(site,tag)
+					dicttrans = getdict(site,tag)
 
 				except Exception as e:
 					logging.error(str(type(e))+"\n"+str(e.args)+"\n"+e.message)
 
-					# To show word
-					self.response.out.write(
-							"<br><br><font size=5>"+\
-							w.encode('utf-8')+\
-							"</font><hr>No word matched.")
+					if site=="longman" and delay==1:
+						w=w+"_1"
+						continue
+					else:
+						text="No word matched."
 
 					break
 
 				else:
-					# To show word
-					self.response.out.write(
-							"<br><br><font size=5>"+\
-							dictword.encode('utf-8')+\
-							"</font><hr><br>")
-
-					# To show translation
-					self.response.out.write(dicttrans)
-
+					text=dicttrans
 					break
 
 			else:
-				pass
 
-			time.sleep(delay)
-			delay*=2
+				time.sleep(delay)
+				delay*=2
 
-		if delay < 10:
-			pass
+		if delay >= 10:
+			text="Failed to retrieve."
 
-		else:
-			self.response.out.write(
-					"<br><br><font size=5>"+\
-					w.encode('utf-8')+\
-					"</font><hr><br>Failed to retrieve...")
+		self.response.out.write( 
+				"<br><br><font size=5>"+\
+				ws.encode('utf-8')+\
+				"</font><hr>")
+
+		self.response.out.write(text)
 
 
 app = webapp2.WSGIApplication([
