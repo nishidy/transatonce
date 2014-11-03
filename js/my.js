@@ -55,7 +55,6 @@ function notice(i,word){
 	vanish(i,10);
 }
 
-
 function makeQuery(){
 
 	document.forms['trans'].elements['input'].disabled=true;
@@ -83,7 +82,7 @@ function query(i,artext,ncur){
 		}
 	}
 
-	if(i==artext.length){
+	if(i>=artext.length){
 		document.forms['trans'].elements['input'].disabled=false;
 		return;
 	}
