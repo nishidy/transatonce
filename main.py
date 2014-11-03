@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 import webapp2
+import os
 
 ### Importing Google App API Library 
 from google.appengine.ext.webapp import util
@@ -29,13 +30,20 @@ from BeautifulSoup import BeautifulSoup
 class MainHandler(webapp2.RequestHandler):
 
     def get(self):
+		if(os.environ.has_key('SERVER_SOFTWARE')):
+			if("Development" in os.environ.get('SERVER_SOFTWARE')):
+				js="my.js"
+			else:
+				js="my.min.js"
+		else:
+			logging.error("This environment is weird.")
 
 		header='''
 <!DOCTYPE html>
 	<html>
 	 <head>
 	  <title>transatonce</title>
-	  <script type='text/javascript' src='js/my.js'></script>
+	  <script type='text/javascript' src='js/%s'></script>
 	  <script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
 	  <script type='text/javascript'>
 	   document.onkeyup=function(e){
@@ -49,11 +57,13 @@ class MainHandler(webapp2.RequestHandler):
 	 </head>
 
 	 <body>
-'''
+''' % js
 
 		cont = '''
 	  <font size=5>Translate through dictionary site at once.</font><br><hr>
 	  Note : One line, one phrase. ESC will clear all the text.<br>
+	  <br>
+	  <img src="image/test.png" width="50%" border=1><br>
 	  <br>
 
 	  <form action="#" name=trans>
