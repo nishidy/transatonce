@@ -115,26 +115,43 @@ class TransHandler(webapp2.RequestHandler):
 		def gettag(site,result):
 
 			soup = BeautifulSoup(result.content)
-			if site=="alc":
-				tag = soup.find("div",regex[site])
-			elif site=="goo":
+			if site=="goo":
 				tag = soup.find("dl",regex[site])
-			elif site=="longman":
+			elif site=="XXX":
+				#tag = soup.find("xxx",regex[site])
+				pass
+			else:
 				tag = soup.find("div",regex[site])
 
 			return tag
 
+		# if it is incapable of Japanese
+		def isjaincap(site,w):
+			if site!="alc":
+				for _w in w:
+					if ord(_w)>255:
+						return True
+
+			return False
 
 		w = self.request.get('word')
 		site = self.request.get('site')
+
 		if w == "" or site == "":
 			self.response.out.write("")
 			return
 
+		# save w
 		ws = w
 
+		# to store the result to show
+		text=""
+
+		if isjaincap(site,w):
+			text="<b>Please choose alc for the translation from Japanese to English.</b>"
+
 		delay=1
-		while delay < 10:
+		while delay < 10 and text=="":
 
 			wr = w.replace(" ","%20")
 			result = urlfetch.fetch(url[site]%wr)
