@@ -189,7 +189,7 @@ class TransHandler(webapp2.RequestHandler):
 					dicttrans = getdict(site,tag)
 
 				except Exception as e:
-					logging.error(str(type(e))+"\n"+str(e.args)+"\n"+e.message)
+					logging.error(str(type(e))+" "+str(e.args)+"\nsite:"+site+", word:"+w)
 
 					if site=="longman" and delay==1:
 						w=w+"_1"
