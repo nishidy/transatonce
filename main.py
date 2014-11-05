@@ -184,9 +184,8 @@ class TransHandler(webapp2.RequestHandler):
 
 			if result.status_code==200:
 
-				tag = gettag(site,result)
-
 				try:
+					tag = gettag(site,result)
 					dicttrans = getdict(site,tag)
 
 				except Exception as e:
