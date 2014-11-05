@@ -47,9 +47,11 @@ class MainHandler(webapp2.RequestHandler):
 	  <script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
 	  <script type='text/javascript'>
 	   document.onkeyup=function(e){
-		   if(e.keyCode==27){ // ESC:27
-			   deleteElement('disp_parent');
-	           document.trans.text.value="";
+		   if(!document.forms['trans'].elements['input'].disabled){
+			   if(e.keyCode==27){ // ESC:27
+				   deleteElement('disp_parent');
+		           document.trans.text.value="";
+			   }
 		   }
 	   };
 	  </script>
@@ -102,6 +104,11 @@ class TransHandler(webapp2.RequestHandler):
 		regex["goo"] = {"class":"allList"}
 		regex["longman"] = {"class":"Entry"}
 
+		color = {}
+		color["alc"] = "crimson"
+		color["goo"] = "sienna"
+		color["longman"] = "navy"
+
 		def getdict(site,divs):
 
 			if site=="alc":
@@ -115,10 +122,19 @@ class TransHandler(webapp2.RequestHandler):
 				dicttrans=str(divs.find("dd").string)+page.encode('utf-8')
 
 			elif site=="longman":
-				div=str(divs.find("div",{"class":"Sense"}))
+				div=""
+				for cdivs in divs.findAll("div",{"class":"Sense"}):
+					for d in cdivs.contents:
+						try:
+							if d['class'] == 'numsense': continue
+							if d['class'] == 'FIELD': continue
+						except:
+							# Key error for 'class'
+							pass
+
+						div+=str(d)
+
 				dicttrans=div.replace("src=\"","src=\""+'/'.join(url[site].split("/")[:3]))
-				
-				pass
 
 			return dicttrans
 
@@ -192,11 +208,11 @@ class TransHandler(webapp2.RequestHandler):
 		if delay >= 10:
 			text="Failed to retrieve."
 
-		self.response.out.write( 
-				"<br><br><font size=5>"+\
-				ws.encode('utf-8')+\
-				"</font><hr>")
+		wsout =""
+		wsout+="<br><br><font size=5>"+ws.encode('utf-8')+"</font>"
+		wsout+="&nbsp;&nbsp;&nbsp;<font size=2 color=white style=background-color:"+color[site]+">&nbsp;&nbsp;"+site+"&nbsp;&nbsp;</font><hr>"
 
+		self.response.out.write(wsout)
 		self.response.out.write(text)
 
 
