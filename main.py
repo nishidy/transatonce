@@ -163,6 +163,8 @@ class TransHandler(webapp2.RequestHandler):
 		w = self.request.get('word')
 		site = self.request.get('site')
 
+		logging.info("site:"+site+", word:"+w)
+
 		if w == "" or site == "":
 			self.response.out.write("")
 			return
