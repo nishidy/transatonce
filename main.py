@@ -6,7 +6,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#	  http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,12 +29,14 @@ from BeautifulSoup import BeautifulSoup
 
 class MainHandler(webapp2.RequestHandler):
 
-    def get(self):
+	def get(self):
 		if(os.environ.has_key('SERVER_SOFTWARE')):
 			if("Development" in os.environ.get('SERVER_SOFTWARE')):
-				js="my.js"
+				my="my.js"
+				animation="animation.js"
 			else:
-				js="my.min.js"
+				my="my.min.js"
+				animation="animation.min.js"
 		else:
 			logging.error("This environment is weird.")
 
@@ -44,40 +46,31 @@ class MainHandler(webapp2.RequestHandler):
 	 <head>
 	  <title>transatonce</title>
 	  <script type='text/javascript' src='js/%s'></script>
+	  <script type='text/javascript' src='js/%s'></script>
 	  <script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
 	  <script type='text/javascript'>
-	   document.onkeyup=function(e){
-		   if(!document.forms['trans'].elements['input'].disabled){
-			   if(e.keyCode==27){ // ESC:27
-				   deleteElement('disp_parent');
-		           document.trans.text.value="";
-			   }
-		   }
-	   };
+	  	document.onkeyup=onKeyUp;
+	  	imageLoader();
 	  </script>
-	  
 	 </head>
 
 	 <body>
-''' % js
+''' % (my,animation)
 
 		cont = '''
-	  <font size=5>Translate through dictionary site at once.</font><br><hr>
-	  Note : One line, one phrase. ESC will clear all the text.<br>
-	  <br>
-	  <img src="image/test.png" width="50%" border=1><br>
+	  <a href="images/test.png" border=1>What is this?</a><br>
 	  <br>
 
 	  <form action="#" name=trans>
-	   <textarea name=text rows=5 cols=20" onChange="count()"></textarea><br>
-	   <input type=button name=input value="Translate" OnClick="makeQuery()">
+	   <textarea name=text rows=5 cols=20" onChange="count()" onClick="ask()"></textarea><br>
+	   <input type=button name=input value="Go" onClick="makeQueries()">
 	   <br>
 	   <input type=radio name=site value=alc checked>alc
 	   <input type=radio name=site value=goo>goo
 	   <input type=radio name=site value=longman>longman
 	   <br>
-	   <input type=checkbox name=append>append
-	   <input type=checkbox name=notice checked>notice
+	   <input type=checkbox name=increment onClick="explain('increment')">incremental
+	   <input type=checkbox name=notice onClick="explain('notice')" checked hidden>
 	  </form>
 
 	  <div id=disp_parent></div>
@@ -176,13 +169,18 @@ class TransHandler(webapp2.RequestHandler):
 		text=""
 
 		if isjaincap(site,w):
-			text="<b>Please choose alc for the translation from Japanese to English.</b>"
+			text="<b>\"alc\"を選んでください.</b>"
 
 		delay=1
 		while delay < 10 and text=="":
 
-			wr = w.replace(" ","%20")
-			result = urlfetch.fetch(url[site]%wr)
+			try:
+				wr = w.replace(" ","%20")
+				result = urlfetch.fetch(url[site]%wr)
+			except Exception as e:
+				logging.error(str(type(e))+" "+str(e.args))
+				text="%s might not be available now."%site
+				break
 
 			if result.status_code==200:
 
@@ -202,6 +200,9 @@ class TransHandler(webapp2.RequestHandler):
 				else:
 					text=dicttrans
 					break
+			else:
+				pass
+				# Try again after sleep
 
 			time.sleep(delay)
 			delay*=2
@@ -210,16 +211,25 @@ class TransHandler(webapp2.RequestHandler):
 			text="Failed to retrieve."
 
 		wsout =""
-		wsout+="<br><br><font size=5>"+ws.encode('utf-8')+"</font>"
-		wsout+="&nbsp;&nbsp;&nbsp;<font size=2 color=white style=background-color:"+color[site]+">&nbsp;&nbsp;"+site+"&nbsp;&nbsp;</font><hr>"
+		sp = "&nbsp;"
+
+		wsout+="<br><font size=5>"+ws.encode('utf-8')+"</font>"
+		wsout+=sp*3
+
+		wsout+="<font size=2 color=white style=background-color:"+color[site]+">"
+		wsout+=sp*2
+		wsout+=site.encode('utf-8')
+		wsout+=sp*2
+		wsout+="</font><hr>"
+
+		wsout+=str(text)
 
 		self.response.out.write(wsout)
-		self.response.out.write(text)
 
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler),
-    ('/trans',TransHandler)
+	('/', MainHandler),
+	('/trans',TransHandler)
 ], debug=True)
 
 util.run_wsgi_app(app)

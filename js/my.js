@@ -1,5 +1,12 @@
+function onKeyUp(e){
+	if(document.forms['trans'].elements['input'].disabled){ return;}
 
-function deleteElement(id){
+	if(e.keyCode==27){ // 27:ESC
+		deleteChildElements('disp_parent');
+	}
+};
+
+function deleteChildElements(id){
 	elem=document.getElementById(id);
 	firstChild=elem.firstChild;
 	if(firstChild==null) return;
@@ -43,7 +50,7 @@ function notice(i,word){
 
 	var prop = {
 		position: "absolute",
-		top : ($(window).scrollTop()+15)+"px",
+		top : ($(window).scrollTop()+$(window).height()-75)+"px",
 		left: (window.innerWidth*4/5)+"px",
 		border: "3px solid yellow",
 		padding: "10px",
@@ -55,35 +62,94 @@ function notice(i,word){
 	vanish(i,10);
 }
 
-function makeQuery(){
+function makeQueries(){
 
 	document.forms['trans'].elements['input'].disabled=true;
 
-	if( ! document.forms['trans'].elements['append'].checked ){
-		deleteElement("disp_parent");
+	if(!document.forms['trans'].elements['increment'].checked){
+		deleteChildElements("disp_parent");
 	}
 
 	var text = document.forms['trans'].elements['text'].value;
-	var artext = text.split('\n');
+	var words = [];
+	var splits=text.split('\n')
+	for(var i=0;i<splits.length;++i){
+		if(splits[i]==""){
+		}else{
+			words.push(splits[i]);
+		}
+	}
 	var field = document.getElementById('disp_parent');
 
-	ncur = document.getElementById('disp_parent').childNodes.length;
+	ncur=0;
+	if(field.lastChild){
+		ncur = parseInt(field.lastChild.id.split('_')[1])+1;
+	}
 
-	query(0,artext,ncur);
-}
-
-function query(i,artext,ncur){
-
-	//if(i>0) ripple(230,i%3);
-
-	if(document.forms['trans'].elements['notice'].checked){
-		if(i>0){
-			if(artext[i-1]!="") notice(i,artext[i-1]);
+	site="";
+	site_elem=document.forms['trans'].elements['site'];
+	for(var j=0;j<site_elem.length;j++){
+		if(site_elem[j].checked){
+			site=site_elem[j].value;
+			break;
 		}
 	}
 
-	if(i>=artext.length){
+	new_div= document.createElement("div");
+	new_div.id = "loader_image";
+	new_p= document.createElement("p");
+	new_div.appendChild(new_p);
+	document.body.appendChild(new_div);
+	startAnimation(site);
+
+	query(0,words,ncur,site);
+}
+
+function deleteDiv(id){
+	par=document.getElementById("disp_parent");
+	par.removeChild(document.getElementById(id));
+}
+
+function query(i,words,ncur,site){
+
+	//if(i>0) ripple(230,i%3);
+	if(document.forms['trans'].elements['notice'].checked){
+		if(i>0){
+			if(words[i-1]!="") notice(i,words[i-1]);
+		}
+	}
+
+	if(i>0){
+		prev_id = "disp_"+String(i-1+ncur);
+		prev_div = document.getElementById(prev_id);
+
+		new_input=document.createElement("input");
+		new_input.type="button";
+		new_input.value="Close";
+
+		// XXX: addEventListener and onclick property not working.
+		//new_input.addEventListener("click",function(){deleteDiv(prev_id);});
+		//new_input.onclick="deleteDiv("+prev_id+")";
+		new_input.setAttribute("onClick","deleteDiv('"+prev_id+"')");
+
+		new_span=document.createElement("span");
+		new_span.innerHTML="&nbsp;&nbsp;";
+
+		if(prev_div.childNodes.length>4){
+			prev_div.insertBefore(new_input,prev_div.childNodes[4]);
+			prev_div.insertBefore(new_span,prev_div.childNodes[4]);
+		}else{
+			if(prev_div.firstChild){
+				prev_div.insertBefore(new_span,prev_div.firstChild);
+				prev_div.insertBefore(new_input,prev_div.firstChild);
+			}
+		}
+	}
+
+	if(i>=words.length){
 		document.forms['trans'].elements['input'].disabled=false;
+		stopAnimation();
+		document.body.removeChild(document.getElementById("loader_image"));
 		return;
 	}
 
@@ -93,19 +159,12 @@ function query(i,artext,ncur){
 
 	document.getElementById('disp_parent').appendChild(new_div);
 
-	var j;
-	for(j=0;j<document.forms['trans'].elements['site'].length;j++){
-		if(document.forms['trans'].elements['site'][j].checked){
-			site=document.forms['trans'].elements['site'][j].value;
-			break;
-		}
-	}
-
 	$('div#'+tag_div).load(
-			'/trans',
-			{word:artext[i],site:site},
-			function(responseText, status, XMLHttpRequest)
-			  {query(i+1,artext,ncur)}
+		'/trans',
+		{word:words[i],site:site},
+		function(responseText, status, XMLHttpRequest){
+			query(i+1,words,ncur,site);
+		}
 	);
 }
 
@@ -115,4 +174,33 @@ function count(){
 		alert("Too many words to process!\n");
 	}
 }
+
+function explain(name){
+	if(name=="increment"){
+		if(document.forms['trans'].elements['increment'].checked){
+			alert("このボタンをチェックすることにより、前回の結果に続けて表示していきます。");
+		}
+	}else if(name=="notice")
+		if(!document.forms['trans'].elements['notice'].checked){
+			alert("noticeボタンのチェックを外すと、処理が終わった通知が出なくなります。");
+	}
+}
+
+function ask(){
+
+	if(document.forms['trans'].elements['input'].disabled){ return; }
+	if(!document.forms['trans'].elements['increment'].checked){ return; }
+
+	var text = document.forms['trans'].elements['text'].value;
+	if( text == "" ){ return; }
+
+	var r = confirm("テキストボックスの内容を消去しますか?");
+	if (r == true) {
+		document.forms['trans'].elements['text'].value="";
+	} else {
+		
+	}
+
+}
+
 
