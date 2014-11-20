@@ -40,11 +40,19 @@ class MainHandler(webapp2.RequestHandler):
 		else:
 			logging.error("This environment is weird.")
 
+		meta=""
+		if(os.environ.has_key('HTTP_USER_AGENT')):
+			agent=os.environ.get('HTTP_USER_AGENT')
+			if("iPhone" in agent) or ("iPad" in agent) or ("Android" in agent) or\
+			  ("iphone" in agent) or ("ipad" in agent) or ("android" in agent):
+				meta="<meta name=viewport content=width=device-width>"
+
 		header='''
 <!DOCTYPE html>
 	<html>
 	 <head>
 	  <title>transatonce</title>
+	  %s
 	  <script type='text/javascript' src='js/%s'></script>
 	  <script type='text/javascript' src='js/%s'></script>
 	  <script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
@@ -55,7 +63,7 @@ class MainHandler(webapp2.RequestHandler):
 	 </head>
 
 	 <body>
-''' % (my,animation)
+''' % (meta,my,animation)
 
 		cont = '''
 	  <a href="images/test.png" border=1>What is this?</a><br>
@@ -65,11 +73,11 @@ class MainHandler(webapp2.RequestHandler):
 	   <textarea name=text rows=5 cols=20" onChange="count()" onClick="ask()"></textarea><br>
 	   <input type=button name=input value="Go" onClick="makeQueries()">
 	   <br>
-	   <input type=radio name=site value=alc checked>alc
-	   <input type=radio name=site value=goo>goo
-	   <input type=radio name=site value=longman>longman
+	   <label><input type=radio name=site value=alc checked>alc</label>
+	   <label><input type=radio name=site value=goo>goo</label>
+	   <label><input type=radio name=site value=longman>longman</label>
 	   <br>
-	   <input type=checkbox name=increment onClick="explain('increment')">incremental
+	   <label><input type=checkbox name=increment onClick="explain('increment')">incremental</label>
 	   <input type=checkbox name=notice onClick="explain('notice')" checked hidden>
 	  </form>
 

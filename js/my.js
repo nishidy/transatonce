@@ -50,8 +50,9 @@ function notice(i,word){
 
 	var prop = {
 		position: "absolute",
-		top : ($(window).scrollTop()+$(window).height()-75)+"px",
-		left: (window.innerWidth*4/5)+"px",
+		//top : ($(window).scrollTop()+$(window).height()-75)+"px",
+		top : ($(window).scrollTop()+25)+"px",
+		left: (window.innerWidth*3/5)+"px",
 		border: "3px solid yellow",
 		padding: "10px",
 		backgroundColor:"#ffffcc",
@@ -82,8 +83,9 @@ function makeQueries(){
 	var field = document.getElementById('disp_parent');
 
 	ncur=0;
-	if(field.lastChild){
-		ncur = parseInt(field.lastChild.id.split('_')[1])+1;
+	for (i=0;i<field.childNodes.length;i++){
+		id=parseInt(field.childNodes[i].id.split('_')[1])+1;
+		if(ncur<id){ ncur=id; }
 	}
 
 	site="";
@@ -99,7 +101,8 @@ function makeQueries(){
 	new_div.id = "loader_image";
 	new_p= document.createElement("p");
 	new_div.appendChild(new_p);
-	document.body.appendChild(new_div);
+
+	document.body.insertBefore(new_div,field);
 	startAnimation(site);
 
 	query(0,words,ncur,site);
@@ -157,7 +160,12 @@ function query(i,words,ncur,site){
 	new_div = document.createElement("div");
 	new_div.id=tag_div;
 
-	document.getElementById('disp_parent').appendChild(new_div);
+	parent=document.getElementById('disp_parent');
+	if(parent.firstChild){
+		parent.insertBefore(new_div,parent.firstChild);
+	}else{
+		parent.appendChild(new_div);
+	}
 
 	$('div#'+tag_div).load(
 		'/trans',
