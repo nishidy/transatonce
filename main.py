@@ -82,14 +82,14 @@ class TransHandler(webapp2.RequestHandler):
 		def parseTags(site,tags_info):
 
 			if site=="alc":
-				dicttrans= tags_info.find("div")
+				parsed_result=tags_info.find("div")
 
 			elif site=="goo":
 				a=tags_info.find("dt").find("a")
 				href=a.get("href")
 				goourl='/'.join(url[site].split("/")[:3])
 				page=" <a href=\""+goourl+href+"\" target=\"_blank\">-></a>"
-				dicttrans=str(tags_info.find("dd").string)+page.encode('utf-8')
+				parsed_result=str(tags_info.find("dd").string)+page.encode('utf-8')
 
 			elif site=="longman":
 				div=""
@@ -103,9 +103,9 @@ class TransHandler(webapp2.RequestHandler):
 							pass
 						div+=str(d)
 
-				dicttrans=div.replace("src=\"","src=\""+'/'.join(url[site].split("/")[:3]))
+				parsed_result=div.replace("src=\"","src=\""+'/'.join(url[site].split("/")[:3]))
 
-			return dicttrans
+			return parsed_result
 
 		def getTagsInfo(site,fetched):
 
@@ -140,12 +140,12 @@ class TransHandler(webapp2.RequestHandler):
 			if fetched.status_code==200:
 				try:
 					tags_info = getTagsInfo(site,fetched)
-					dicttrans = parseTags(site,tags_info)
+					parsed_result= parseTags(site,tags_info)
 				except Exception as e:
 					logging.error(str(type(e))+" "+str(e.args)+"\nsite:"+site+", word:"+word)
 					return ""
 				else:
-					return dicttrans
+					return parsed_result
 			else:
 				raise Exception("Returned status code was not 200.");
 
@@ -168,14 +168,14 @@ class TransHandler(webapp2.RequestHandler):
 			resp_result = doUrlFetch(word)
 
 		resp_template=""	
-		sp = "&nbsp;"
+		nbsp = "&nbsp;"
 
 		resp_template+="<br><font size=5>"+word.encode('utf-8')+"</font>"
-		resp_template+=sp*3
+		resp_template+=nbsp*3
 		resp_template+="<font size=2 color=white style=background-color:"+color[site]+">"
-		resp_template+=sp*2
+		resp_template+=nbsp*2
 		resp_template+=site.encode('utf-8')
-		resp_template+=sp*2
+		resp_template+=nbsp*2
 		resp_template+="</font><hr>"
 		resp_template+="訳語の取得に失敗しました." if resp_result=="" else str(resp_result)
 
