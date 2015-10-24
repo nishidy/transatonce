@@ -1,3 +1,19 @@
+function showNotice(){
+	$("#onload_notice").
+		show("blind",{easing:"easeOutBounce"},1000,function(){
+			setTimeout( function(){
+				if($("#onload_notice").is(":visible")){
+					$("#onload_notice").hide("blind",{easing:"easeOutExpo"},1000)
+				}
+			},
+			15000)
+		});
+}
+
+function hideNotice(){
+	$("#onload_notice").hide("blind",{easing:"easeOutExpo"},1000)
+}
+
 function onKeyUp(e){
 	if(document.forms['trans'].elements['input'].disabled){ return;}
 
@@ -7,7 +23,7 @@ function onKeyUp(e){
 };
 
 function deleteChildElements(id){
-	elem=document.getElementById(id);
+	var elem=document.getElementById(id);
 	firstChild=elem.firstChild;
 	if(firstChild==null) return;
 	while(firstChild.nextSibling){
@@ -29,21 +45,22 @@ function ripple(c,k){
 	}
 }
 
-function vanish(i,n){
-	id="notice_"+String(i);
+// my own fadeOut
+function fadeOut(i,n){
+	var id="notice_"+String(i);
 	if(n<0){
-		elem=document.getElementById(id);
+		var elem=document.getElementById(id);
 		pnode=elem.parentNode;
 		pnode.removeChild(elem);
 		return;
 	}
 	$("#"+id).css({opacity:n/10.0});
-	setTimeout(function(){vanish(i,n-1)},50);
+	setTimeout(function(){fadeOut(i,n-1)},50);
 }
 
 function notice(i,word){
-	id="notice_"+String(i);
-	new_span = document.createElement("span");
+	var id="notice_"+String(i);
+	var new_span = document.createElement("span");
 	new_span.innerHTML = word;
 	new_span.id = id;
 	document.body.appendChild(new_span);
@@ -60,7 +77,20 @@ function notice(i,word){
 	}
 
 	$("#"+id).css(prop);
-	vanish(i,10);
+
+	$("#"+id).show();
+	setTimeout(
+		function(){
+			//$("#"+id).hide("highlight",{},1000)
+			$("#"+id).fadeOut(function(){
+				var elem=document.getElementById(id);
+				pnode=elem.parentNode;
+				pnode.removeChild(elem);
+			});
+		},
+		1000
+	);
+	//fadeOut(i,10);
 }
 
 function makeQueries(){
@@ -82,13 +112,13 @@ function makeQueries(){
 	}
 	var field = document.getElementById('disp_parent');
 
-	ncur=0;
+	var ncur=0;
 	for (i=0;i<field.childNodes.length;i++){
 		id=parseInt(field.childNodes[i].id.split('_')[1])+1;
 		if(ncur<id){ ncur=id; }
 	}
 
-	site="";
+	var site="";
 	site_elem=document.forms['trans'].elements['site'];
 	for(var j=0;j<site_elem.length;j++){
 		if(site_elem[j].checked){
@@ -97,9 +127,9 @@ function makeQueries(){
 		}
 	}
 
-	new_div= document.createElement("div");
+	var new_div= document.createElement("div");
 	new_div.id = "loader_image";
-	new_p= document.createElement("p");
+	var new_p= document.createElement("p");
 	new_div.appendChild(new_p);
 
 	document.body.insertBefore(new_div,field);
@@ -109,7 +139,7 @@ function makeQueries(){
 }
 
 function deleteDiv(id){
-	par=document.getElementById("disp_parent");
+	var par=document.getElementById("disp_parent");
 	par.removeChild(document.getElementById(id));
 }
 
@@ -123,10 +153,10 @@ function query(i,words,ncur,site){
 	}
 
 	if(i>0){
-		prev_id = "disp_"+String(i-1+ncur);
-		prev_div = document.getElementById(prev_id);
+		var prev_id = "disp_"+String(i-1+ncur);
+		var prev_div = document.getElementById(prev_id);
 
-		new_input=document.createElement("input");
+		var new_input=document.createElement("input");
 		new_input.type="button";
 		new_input.value="Close";
 
@@ -135,7 +165,7 @@ function query(i,words,ncur,site){
 		//new_input.onclick="deleteDiv("+prev_id+")";
 		new_input.setAttribute("onClick","deleteDiv('"+prev_id+"')");
 
-		new_span=document.createElement("span");
+		var new_span=document.createElement("span");
 		new_span.innerHTML="&nbsp;&nbsp;";
 
 		if(prev_div.childNodes.length>4){
@@ -156,8 +186,8 @@ function query(i,words,ncur,site){
 		return;
 	}
 
-	tag_div = "disp_"+String(i+ncur);
-	new_div = document.createElement("div");
+	var tag_div = "disp_"+String(i+ncur);
+	var new_div = document.createElement("div");
 	new_div.id=tag_div;
 
 	parent=document.getElementById('disp_parent');
@@ -186,12 +216,22 @@ function count(){
 function explain(name){
 	if(name=="increment"){
 		if(document.forms['trans'].elements['increment'].checked){
-			alert("このボタンをチェックすることにより、前回の結果に続けて表示していきます。");
+			//alert("このボタンをチェックすることにより、前回の結果に続けて表示していきます。");
+			incr_notice();
 		}
 	}else if(name=="notice")
 		if(!document.forms['trans'].elements['notice'].checked){
 			alert("noticeボタンのチェックを外すと、処理が終わった通知が出なくなります。");
 	}
+}
+
+function incr_notice(){
+	$("#incr_notice").
+		show("blind",{easing:"easeOutBounce"},1000,function(){
+			setTimeout( function(){
+				$("#incr_notice").hide("blind",{easing:"easeOutExpo"},1000)},
+				5000)
+		});
 }
 
 function ask(){
@@ -202,12 +242,15 @@ function ask(){
 	var text = document.forms['trans'].elements['text'].value;
 	if( text == "" ){ return; }
 
+	/*
 	var r = confirm("テキストボックスの内容を消去しますか?");
 	if (r == true) {
 		document.forms['trans'].elements['text'].value="";
 	} else {
 		
 	}
+	*/
+	document.forms['trans'].elements['text'].value="";
 
 }
 

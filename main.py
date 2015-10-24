@@ -26,122 +26,90 @@ import random, re, logging, time
 
 ### Importing User Library
 from BeautifulSoup import BeautifulSoup
+from retrying import retry
 
 class MainHandler(webapp2.RequestHandler):
 
 	def get(self):
+		# minify command was locally installed by 'npm install -g minifier'
 		if(os.environ.has_key('SERVER_SOFTWARE')):
 			if("Development" in os.environ.get('SERVER_SOFTWARE')):
-				my="my.js"
-				animation="animation.js"
+				my_js="my.js"
+				animation_js="animation.js"
 			else:
-				my="my.min.js"
-				animation="animation.min.js"
+				my_js="my.min.js"
+				animation_js="animation.min.js"
 		else:
-			logging.error("This environment is weird.")
+			logging.error("This environment is wierd.")
 
-		meta=""
+		meta_tag=""
 		if(os.environ.has_key('HTTP_USER_AGENT')):
 			agent=os.environ.get('HTTP_USER_AGENT')
 			if("iPhone" in agent) or ("iPad" in agent) or ("Android" in agent) or\
 			  ("iphone" in agent) or ("ipad" in agent) or ("android" in agent):
-				meta="<meta name=viewport content=width=device-width>"
+				meta_tag="<meta name=viewport content=width=device-width>"
 
-		header='''
-<!DOCTYPE html>
-	<html>
-	 <head>
-	  <title>transatonce</title>
-	  %s
-	  <script type='text/javascript' src='js/%s'></script>
-	  <script type='text/javascript' src='js/%s'></script>
-	  <script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
-	  <script type='text/javascript'>
-	  	document.onkeyup=onKeyUp;
-	  	imageLoader();
-	  </script>
-	 </head>
+		html=open("html/main.html").read().format(
+			meta=meta_tag,
+			my=my_js,
+			animation=animation_js
+		)
 
-	 <body>
-''' % (meta,my,animation)
+		self.response.out.write(html)
 
-		cont = '''
-	  <a href="images/test.png" border=1>What is this?</a><br>
-	  <br>
-
-	  <form action="#" name=trans>
-	   <textarea name=text rows=5 cols=20" onChange="count()" onClick="ask()"></textarea><br>
-	   <input type=button name=input value="Go" onClick="makeQueries()">
-	   <br>
-	   <label><input type=radio name=site value=alc checked>alc</label>
-	   <label><input type=radio name=site value=goo>goo</label>
-	   <label><input type=radio name=site value=longman>longman</label>
-	   <br>
-	   <label><input type=checkbox name=increment onClick="explain('increment')">incremental</label>
-	   <input type=checkbox name=notice onClick="explain('notice')" checked hidden>
-	  </form>
-
-	  <div id=disp_parent></div>
-'''
-
-		footer='''
-	 </body>
-	</html>
-'''
-
-		self.response.out.write(header+cont+footer)
-	
 class TransHandler(webapp2.RequestHandler):
 
 	def post(self):
 
-		url = {}
-		url["alc"] = "http://eow.alc.co.jp/%s/utf-8/"
-		url["goo"] = "http://dictionary.goo.ne.jp/srch/ej/%s/m0u/"
-		url["longman"]="http://www.ldoceonline.com/dictionary/%s"
+		url = {
+			"alc": "http://eow.alc.co.jp/%s/utf-8/",
+			"goo": "http://dictionary.goo.ne.jp/srch/ej/%s/m0u/",
+			"longman": "http://www.ldoceonline.com/dictionary/%s",
+		}
 
-		regex = {}
-		regex["alc"] = {"id":"resultsList"}
-		regex["goo"] = {"class":"allList"}
-		regex["longman"] = {"class":"Entry"}
+		regex = {
+			"alc": {"id": "resultsList"},
+			"goo": {"class": "allList"},
+			"longman": {"class": "Entry"}
+		}
 
-		color = {}
-		color["alc"] = "crimson"
-		color["goo"] = "sienna"
-		color["longman"] = "navy"
+		color = {
+			"alc": "crimson",
+			"goo": "sienna",
+			"longman": "navy"
+		}
 
-		def getdict(site,divs):
+		def parseTags(site,tags_info):
 
 			if site=="alc":
-				dicttrans= divs.find("div")
+				dicttrans= tags_info.find("div")
 
 			elif site=="goo":
-				a=divs.find("dt").find("a")
+				a=tags_info.find("dt").find("a")
 				href=a.get("href")
 				goourl='/'.join(url[site].split("/")[:3])
 				page=" <a href=\""+goourl+href+"\" target=\"_blank\">-></a>"
-				dicttrans=str(divs.find("dd").string)+page.encode('utf-8')
+				dicttrans=str(tags_info.find("dd").string)+page.encode('utf-8')
 
 			elif site=="longman":
 				div=""
-				for cdivs in divs.findAll("div",{"class":"Sense"}):
-					for d in cdivs.contents:
+				for ctags_info in tags_info.findAll("div",{"class":"Sense"}):
+					for d in ctags_info.contents:
 						try:
 							if d['class'] == 'numsense': continue
 							if d['class'] == 'FIELD': continue
 						except:
 							# Key error for 'class'
 							pass
-
 						div+=str(d)
 
 				dicttrans=div.replace("src=\"","src=\""+'/'.join(url[site].split("/")[:3]))
 
 			return dicttrans
 
-		def gettag(site,result):
+		def getTagsInfo(site,fetched):
 
-			soup = BeautifulSoup(result.content)
+			soup = BeautifulSoup(fetched.content)
 			if site=="goo":
 				tag = soup.find("dl",regex[site])
 			elif site=="XXX":
@@ -152,88 +120,66 @@ class TransHandler(webapp2.RequestHandler):
 
 			return tag
 
-		# if it is incapable of Japanese
-		def isjaincap(site,w):
+		def isIncapableOfJap(site,word):
 			if site!="alc":
-				for _w in w:
-					if ord(_w)>255:
+				for char in word:
+					if ord(char)>255:
 						return True
 
 			return False
 
-		w = self.request.get('word')
+		@retry(wait_exponential_multiplier=1000,stop_max_attempt_number=3)
+		def doUrlFetch(word):
+
+			try:
+				fetched = urlfetch.fetch(url[site]%word.replace(" ","%20"))
+			except Exception as e:
+				logging.error(str(type(e))+" "+str(e.args))
+				raise e
+
+			if fetched.status_code==200:
+				try:
+					tags_info = getTagsInfo(site,fetched)
+					dicttrans = parseTags(site,tags_info)
+				except Exception as e:
+					logging.error(str(type(e))+" "+str(e.args)+"\nsite:"+site+", word:"+word)
+					return ""
+				else:
+					return dicttrans
+			else:
+				raise Exception("Returned status code was not 200.");
+
+
+		word = self.request.get('word')
 		site = self.request.get('site')
 
-		logging.info("site:"+site+", word:"+w)
+		logging.info("site:"+site+", word:"+word)
 
-		if w == "" or site == "":
+		if word == "" or site == "":
 			self.response.out.write("")
 			return
 
-		# save w
-		ws = w
-
-		# to store the result to show
+		# This is the text to show
 		text=""
 
-		if isjaincap(site,w):
-			text="<b>\"alc\"を選んでください.</b>"
+		if isIncapableOfJap(site,word):
+			resp_result = "<b>日本語からの訳は, \"alc\"が対応しています.</b>"
+		else:
+			resp_result = doUrlFetch(word)
 
-		delay=1
-		while delay < 10 and text=="":
-
-			try:
-				wr = w.replace(" ","%20")
-				result = urlfetch.fetch(url[site]%wr)
-			except Exception as e:
-				logging.error(str(type(e))+" "+str(e.args))
-				text="%s might not be available now."%site
-				break
-
-			if result.status_code==200:
-
-				try:
-					tag = gettag(site,result)
-					dicttrans = getdict(site,tag)
-
-				except Exception as e:
-					logging.error(str(type(e))+" "+str(e.args)+"\nsite:"+site+", word:"+w)
-
-					if site=="longman" and delay==1:
-						w=w+"_1"
-					else:
-						text="No word matched."
-						break
-
-				else:
-					text=dicttrans
-					break
-			else:
-				pass
-				# Try again after sleep
-
-			time.sleep(delay)
-			delay*=2
-
-		if delay >= 10:
-			text="Failed to retrieve."
-
-		wsout =""
+		resp_template=""	
 		sp = "&nbsp;"
 
-		wsout+="<br><font size=5>"+ws.encode('utf-8')+"</font>"
-		wsout+=sp*3
+		resp_template+="<br><font size=5>"+word.encode('utf-8')+"</font>"
+		resp_template+=sp*3
+		resp_template+="<font size=2 color=white style=background-color:"+color[site]+">"
+		resp_template+=sp*2
+		resp_template+=site.encode('utf-8')
+		resp_template+=sp*2
+		resp_template+="</font><hr>"
+		resp_template+="訳語の取得に失敗しました." if resp_result=="" else str(resp_result)
 
-		wsout+="<font size=2 color=white style=background-color:"+color[site]+">"
-		wsout+=sp*2
-		wsout+=site.encode('utf-8')
-		wsout+=sp*2
-		wsout+="</font><hr>"
-
-		wsout+=str(text)
-
-		self.response.out.write(wsout)
-
+		self.response.out.write(resp_template)
 
 app = webapp2.WSGIApplication([
 	('/', MainHandler),
