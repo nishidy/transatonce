@@ -1,5 +1,5 @@
 #Purpose
-transatonce = Translate several words at once  
+transatonce = Translate and show several words at once  
 This is running on Google App Engine at <http://transatonce.appspot.com>.
 
 #Requirement
