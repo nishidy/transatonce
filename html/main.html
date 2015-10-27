@@ -12,11 +12,14 @@
 		<script type='text/javascript'>
 	  		document.onkeyup=onKeyUp;
 		  	imageLoader();
-			window.onload = function(){{showNotice()}};
 		</script>
 	</head>
 
 	<body>
+
+		<div id=onload_notice_toggle align=center style='color:white; background-color:blue; position:absolute; top:-10px; left:0; width:100%;' onmouseover=showNotice() onclick=showNotice()><br></div>
+
+		<br>
 
 		<form action="#" name=trans>
 			<textarea name=text rows=5 cols=20" onChange="count()" onClick="ask()"></textarea>
@@ -40,7 +43,8 @@
 			<br>
 		</div>
 
-		<div id=onload_notice align=center style='display: none; color:white; background-color:blue; position:absolute; top:0; left:0; width:100%;' ondblclick=hideNotice()>
+
+		<div id=onload_notice align=center style='display: none; color:white; background-color:blue; position:absolute; top:0; left:0; width:100%;' onmouseout=hideNotice()>
 			<br>
 			選択した辞書サイトから単語の訳の上位のものを取得します.<br>
 			例えば、フォームに以下のように入力してGoボタンを押してください.<br>
@@ -50,8 +54,6 @@
 			輝く<br>
 			<br>
 			ESCボタンで表示結果を全てクリアします.<br>
-			<br>
-			(ダブルクリックで閉じる)
 			<br>
 		</div>
 
