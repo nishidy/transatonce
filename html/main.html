@@ -36,7 +36,7 @@
 
 		<div id=disp_parent></div>
 
-		<div id=incr_notice align=center style='display: none; color:white; background-color:hotpink; position:absolute; top:0; left:0; width:100%;'>
+		<div id=incr_notice align=center style='display: none; color:white; background-color:hotpink; position:absolute; top:0; left:0; width:100%;' onmouseout='hideNotice(this.id)' onmouseup='hideNotice(this.id)'>
 			<br>
 			このボタンをチェックすることにより、前回の結果に続けて表示していきます。<br>
 			フォームに入力された単語は、入力のたびに消去されます。<br>
@@ -44,7 +44,7 @@
 		</div>
 
 
-		<div id=onload_notice align=center style='display: none; color:white; background-color:blue; position:absolute; top:0; left:0; width:100%;' onmouseout=hideNotice()>
+		<div id=onload_notice align=center style='display: none; color:white; background-color:blue; position:absolute; top:0; left:0; width:100%;' onmouseout='hideNotice(this.id)'>
 			<br>
 			選択した辞書サイトから単語の訳の上位のものを取得します.<br>
 			例えば、フォームに以下のように入力してGoボタンを押してください.<br>

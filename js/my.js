@@ -10,8 +10,8 @@ function showNotice(){
 		});
 }
 
-function hideNotice(){
-	$("#onload_notice").hide("blind",{easing:"easeOutExpo"},1000)
+function hideNotice(id){
+	$("#"+id).hide("blind",{easing:"easeOutExpo"},1000)
 }
 
 function onKeyUp(e){
