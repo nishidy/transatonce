@@ -17,7 +17,7 @@
 
 	<body>
 
-		<div id=onload_notice_toggle align=center style='color:white; background-color:blue; position:absolute; top:-10px; left:0; width:100%;' onmouseover=showNotice() onclick=showNotice()><br></div>
+		<div id=onload_notice_toggle align=center style='color:white; background-color:blue; position:absolute; top:-10px; left:0; width:100%;' onmouseover='showNotice("onload_notice")' onclick='showNotice("onload_notice")'><br></div>
 
 		<br>
 
@@ -36,7 +36,7 @@
 
 		<div id=disp_parent></div>
 
-		<div id=incr_notice align=center style='display: none; color:white; background-color:hotpink; position:absolute; top:0; left:0; width:100%;' onmouseout='hideNotice(this.id)' onmouseup='hideNotice(this.id)'>
+		<div id=incr_notice align=center style='display: none; color:white; background-color:hotpink; position:absolute; top:0; left:0; width:100%;' onmouseup='hideNotice(this.id)'>
 			<br>
 			このボタンをチェックすることにより、前回の結果に続けて表示していきます。<br>
 			フォームに入力された単語は、入力のたびに消去されます。<br>

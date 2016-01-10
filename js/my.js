@@ -1,9 +1,10 @@
-function showNotice(){
-	$("#onload_notice").
+var timer_id
+function showNotice(id){
+	$("#"+id).
 		show("blind",{easing:"easeOutBounce"},1000,function(){
-			setTimeout( function(){
-				if($("#onload_notice").is(":visible")){
-					$("#onload_notice").hide("blind",{easing:"easeOutExpo"},1000)
+			timer_id = setTimeout( function(){
+				if($("#"+id).is(":visible")){
+					$("#"+id).hide("blind",{easing:"easeOutExpo"},1000)
 				}
 			},
 			15000)
@@ -12,6 +13,7 @@ function showNotice(){
 
 function hideNotice(id){
 	$("#"+id).hide("blind",{easing:"easeOutExpo"},1000)
+    clearTimeout(timer_id)
 }
 
 function onKeyUp(e){
@@ -217,21 +219,12 @@ function explain(name){
 	if(name=="increment"){
 		if(document.forms['trans'].elements['increment'].checked){
 			//alert("このボタンをチェックすることにより、前回の結果に続けて表示していきます。");
-			incr_notice();
+			showNotice("incr_notice");
 		}
 	}else if(name=="notice")
 		if(!document.forms['trans'].elements['notice'].checked){
 			alert("noticeボタンのチェックを外すと、処理が終わった通知が出なくなります。");
 	}
-}
-
-function incr_notice(){
-	$("#incr_notice").
-		show("blind",{easing:"easeOutBounce"},1000,function(){
-			setTimeout( function(){
-				$("#incr_notice").hide("blind",{easing:"easeOutExpo"},1000)},
-				5000)
-		});
 }
 
 function ask(){
