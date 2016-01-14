@@ -20,6 +20,7 @@ import os
 ### Importing Google App API Library 
 from google.appengine.ext.webapp import util
 from google.appengine.api import urlfetch
+from google.appengine.api import memcache
 
 ### Importing Standard Library
 import random, re, logging, time
@@ -28,9 +29,36 @@ import random, re, logging, time
 from BeautifulSoup import BeautifulSoup
 from retrying import retry
 
+import uuid
+import datetime
+
+def validate_userid(x):
+    if x == "":
+        return False
+
+    try:
+        v = uuid.UUID(x,version=4)
+    except ValueError:
+        return False
+
+    return str(v) == x
+
 class MainHandler(webapp2.RequestHandler):
 
+    def set_cookie(self):
+
+        userid = self.request.cookies.get('userid','')
+
+        if not validate_userid(userid):
+            userid = str(uuid.uuid4())
+
+        expires = datetime.datetime.now()+datetime.timedelta(days=+7)
+        exp = expires.strftime('%a, %d-%b-%Y %H:%M:%S GMT')
+
+        self.response.headers.add_header('Set-Cookie', "userid={0};expires={1}".format(userid,exp))
+
     def get(self):
+
         # minify command was locally installed by 'npm install -g minifier'
         if(os.environ.has_key('SERVER_SOFTWARE')):
             if("Development" in os.environ.get('SERVER_SOFTWARE')):
@@ -55,7 +83,45 @@ class MainHandler(webapp2.RequestHandler):
             animation=animation_js
         )
 
+        self.set_cookie()
+
         self.response.out.write(html)
+
+class CacheHandler(webapp2.RequestHandler):
+
+    def get(self):
+
+        userid = self.request.cookies.get('userid','')
+
+        if validate_userid(userid):
+            words = memcache.get(key = userid)
+            if words is not None:
+                self.response.out.write(words.replace(":","\n"))
+            else:
+                self.response.out.write("")
+        else:
+            self.response.out.write("")
+
+class FlushHandler(webapp2.RequestHandler):
+
+    def get(self):
+
+        userid = self.request.cookies.get('userid','')
+
+        cache_num = 0
+        if validate_userid(userid):
+            words = memcache.get(key = userid)
+            if words is not None:
+                cache_num = len(words.split(":"))
+            memcache.delete(key = userid)
+
+        if cache_num == 0:
+            self.response.out.write("")
+        elif cache_num < 10:
+            self.response.out.write("キャッシュから{0}つの単語を削除しました.".format(cache_num))
+        else:
+            self.response.out.write("キャッシュから{0}の単語を削除しました.".format(cache_num))
+
 
 class TransHandler(webapp2.RequestHandler):
 
@@ -179,11 +245,22 @@ class TransHandler(webapp2.RequestHandler):
         resp_template+="</font><hr>"
         resp_template+="訳語の取得に失敗しました." if resp_result=="" else str(resp_result)
 
+        userid = self.request.cookies.get('userid','')
+
+        if validate_userid(userid):
+            words = memcache.get(key = userid)
+            if words is None:
+                memcache.set(key = userid, value = word, time = 604800)
+            else:
+                memcache.set(key = userid, value = words+":"+word, time = 604800)
+
         self.response.out.write(resp_template)
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
-    ('/trans',TransHandler)
+    ('/trans',TransHandler),
+    ('/cache',CacheHandler),
+    ('/flush',FlushHandler)
 ], debug=True)
 
 util.run_wsgi_app(app)
