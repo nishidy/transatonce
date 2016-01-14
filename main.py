@@ -245,6 +245,8 @@ class TransHandler(webapp2.RequestHandler):
         resp_template+="</font><hr>"
         resp_template+="訳語の取得に失敗しました." if resp_result=="" else str(resp_result)
 
+        self.response.out.write(resp_template)
+
         userid = self.request.cookies.get('userid','')
 
         if validate_userid(userid):
@@ -252,9 +254,8 @@ class TransHandler(webapp2.RequestHandler):
             if words is None:
                 memcache.set(key = userid, value = word, time = 604800)
             else:
-                memcache.set(key = userid, value = words+":"+word, time = 604800)
-
-        self.response.out.write(resp_template)
+                if word not in words.split(":"):
+                    memcache.set(key = userid, value = words+":"+word, time = 604800)
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
