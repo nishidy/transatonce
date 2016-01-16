@@ -20,7 +20,7 @@ import os
 ### Importing Google App API Library 
 from google.appengine.ext.webapp import util
 from google.appengine.api import urlfetch
-from google.appengine.api import memcache
+from google.appengine.ext import ndb
 
 ### Importing Standard Library
 import random, re, logging, time
@@ -42,6 +42,13 @@ def validate_userid(x):
         return False
 
     return str(v) == x
+
+def cache_key(userid):
+    return ndb.Key("Userid", userid)
+
+class Cache(ndb.Model):
+    word = ndb.StringProperty(indexed=False)
+    date = ndb.DateTimeProperty(auto_now_add=True)
 
 class MainHandler(webapp2.RequestHandler):
 
@@ -94,11 +101,17 @@ class CacheHandler(webapp2.RequestHandler):
         userid = self.request.cookies.get('userid','')
 
         if validate_userid(userid):
-            words = memcache.get(key = userid)
-            if words is not None:
-                self.response.out.write(words.replace(":","\n"))
-            else:
-                self.response.out.write("")
+
+            cache_query = Cache.query(ancestor=cache_key(userid)).order(-Cache.date)
+            response = "\n".join([c.word for c in cache_query.fetch(10)])
+
+            self.response.out.write(response)
+
+            expires = datetime.datetime.now()+datetime.timedelta(days=-7)
+
+            cache_query = Cache.query(ancestor=cache_key(userid)).filter(Cache.date<=expires)
+            map(lambda c: c.key.delete(), cache_query.fetch())
+
         else:
             self.response.out.write("")
 
@@ -110,10 +123,11 @@ class FlushHandler(webapp2.RequestHandler):
 
         cache_num = 0
         if validate_userid(userid):
-            words = memcache.get(key = userid)
-            if words is not None:
-                cache_num = len(words.split(":"))
-            memcache.delete(key = userid)
+            cache_query = Cache.query(ancestor=cache_key(userid))
+            caches = cache_query.fetch()
+            map(lambda c: c.key.delete(), caches)
+
+            cache_num = len(caches)
 
         if cache_num == 0:
             self.response.out.write("")
@@ -250,12 +264,12 @@ class TransHandler(webapp2.RequestHandler):
         userid = self.request.cookies.get('userid','')
 
         if validate_userid(userid):
-            words = memcache.get(key = userid)
-            if words is None:
-                memcache.set(key = userid, value = word, time = 604800)
-            else:
-                if word not in words.split(":"):
-                    memcache.set(key = userid, value = words+":"+word, time = 604800)
+            cache_query = Cache.query(ancestor=cache_key(userid)).order(-Cache.date)
+
+            if word not in [c.word for c in cache_query.fetch()]:
+                cache = Cache(parent=cache_key(userid))
+                cache.word = word
+                cache.put()
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
