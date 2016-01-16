@@ -102,15 +102,13 @@ class CacheHandler(webapp2.RequestHandler):
 
         if validate_userid(userid):
 
-            cache_query = Cache.query(ancestor=cache_key(userid)).order(-Cache.date)
-            response = "\n".join([c.word for c in cache_query.fetch(10)])
-
-            self.response.out.write(response)
-
             expires = datetime.datetime.now()+datetime.timedelta(days=-7)
-
             cache_query = Cache.query(ancestor=cache_key(userid)).filter(Cache.date<=expires)
             map(lambda c: c.key.delete(), cache_query.fetch())
+
+            cache_query = Cache.query(ancestor=cache_key(userid)).order(-Cache.date)
+            response = "\n".join([c.word for c in cache_query.fetch()])
+            self.response.out.write(response)
 
         else:
             self.response.out.write("")
