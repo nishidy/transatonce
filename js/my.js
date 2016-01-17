@@ -138,14 +138,42 @@ function makeQueries(){
 	startAnimation(site);
 
     if(localStorage.transatonce){
-	    var words_to_cache = [];
-        var cached_words = localStorage.transatonce.split("\n")
+	    var list_to_cache = [];
+        var cached_list = localStorage.transatonce.split("\n")
         for(var i=0;i<words.length;i++){
-            if($.inArray(words[i],cached_words)==-1){
-                words_to_cache.push(words[i]);
+            if($.inArray(words[i],cached_list)==-1){
+                list_to_cache.push(words[i]);
             }
         }
-        localStorage.transatonce += ("\n"+words_to_cache.join("\n"));
+
+        var str_to_cache = list_to_cache.join("\n");
+
+        try{
+            localStorage.transatonce += ("\n"+str_to_cache);
+        } catch (e) {
+            if (e.code === DOMException.QUOTA_EXCEEDED_ERR ||
+                e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+
+                var cached_length = 0;
+                var cached_1st_index = 0;
+
+                for(var i=0;i<cached_list.length-1;i++){
+                    cached_length += cached_list[i].length;
+                    cached_length ++;
+                    if(cached_length>str_to_cache.length){
+                        cached_1st_index = i;
+                        break;
+                    }
+                }
+
+                localStorage.transatonce =
+                    cached_list.slice(cached_1st_index+1).join("\n")+"\n"+str_to_cache;
+
+            } else {
+                alert('エラーが発生しました.');
+            }
+        }
+
     }else{
         localStorage.transatonce = words.join("\n");
     }
