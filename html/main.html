@@ -25,8 +25,7 @@
 			<textarea name=text rows=5 cols=20" onChange="count()" onClick="ask()"></textarea>
 			<br>
 			<input type=button name=input value="Trans" onClick="makeQueries()">
-            <!--<input type=button name=input value="Cache" onClick="getCacheEntries()">//-->
-			<input type=button name=input value="Flush" onClick="flushCacheEntries()">
+            <input type=button name=input value="Clear" onClick="flushCacheEntries()">
 			<br>
 			<label><input type=radio name=site value=alc checked>alc</label>
 			<label><input type=radio name=site value=goo>goo</label>
@@ -49,6 +48,8 @@
 		<div id=onload_notice align=center style='display: none; color:white; background-color:blue; position:absolute; top:0; left:0; width:100%;' onmouseout='hideNotice(this.id)'>
 			<br>
 			選択した辞書サイトから単語の訳の上位のものを取得します.<br>
+            入力した単語はブラウザに保存され, 次回からテキストフィールドに表示されます.<br>
+            (Clearボタンで保存された単語を削除します.)<br>
 			例えば、フォームに以下のように入力してTransボタンを押してください.<br>
 			<br>
 			flower<br>

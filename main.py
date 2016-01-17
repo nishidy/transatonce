@@ -20,7 +20,6 @@ import os
 ### Importing Google App API Library 
 from google.appengine.ext.webapp import util
 from google.appengine.api import urlfetch
-from google.appengine.ext import ndb
 
 ### Importing Standard Library
 import random, re, logging, time
@@ -29,40 +28,7 @@ import random, re, logging, time
 from BeautifulSoup import BeautifulSoup
 from retrying import retry
 
-import uuid
-import datetime
-
-def validate_userid(x):
-    if x == "":
-        return False
-
-    try:
-        v = uuid.UUID(x,version=4)
-    except ValueError:
-        return False
-
-    return str(v) == x
-
-def cache_key(userid):
-    return ndb.Key("Userid", userid)
-
-class Cache(ndb.Model):
-    word = ndb.StringProperty(indexed=False)
-    date = ndb.DateTimeProperty(auto_now_add=True)
-
 class MainHandler(webapp2.RequestHandler):
-
-    def set_cookie(self):
-
-        userid = self.request.cookies.get('userid','')
-
-        if not validate_userid(userid):
-            userid = str(uuid.uuid4())
-
-        expires = datetime.datetime.now()+datetime.timedelta(days=+7)
-        exp = expires.strftime('%a, %d-%b-%Y %H:%M:%S GMT')
-
-        self.response.headers.add_header('Set-Cookie', "userid={0};expires={1}".format(userid,exp))
 
     def get(self):
 
@@ -90,50 +56,7 @@ class MainHandler(webapp2.RequestHandler):
             animation=animation_js
         )
 
-        self.set_cookie()
-
         self.response.out.write(html)
-
-class CacheHandler(webapp2.RequestHandler):
-
-    def get(self):
-
-        userid = self.request.cookies.get('userid','')
-
-        if validate_userid(userid):
-
-            expires = datetime.datetime.now()+datetime.timedelta(days=-7)
-            cache_query = Cache.query(ancestor=cache_key(userid)).filter(Cache.date<=expires)
-            map(lambda c: c.key.delete(), cache_query.fetch())
-
-            cache_query = Cache.query(ancestor=cache_key(userid)).order(-Cache.date)
-            response = "\n".join([c.word for c in cache_query.fetch()])
-            self.response.out.write(response)
-
-        else:
-            self.response.out.write("")
-
-class FlushHandler(webapp2.RequestHandler):
-
-    def get(self):
-
-        userid = self.request.cookies.get('userid','')
-
-        cache_num = 0
-        if validate_userid(userid):
-            cache_query = Cache.query(ancestor=cache_key(userid))
-            caches = cache_query.fetch()
-            map(lambda c: c.key.delete(), caches)
-
-            cache_num = len(caches)
-
-        if cache_num == 0:
-            self.response.out.write("")
-        elif cache_num < 10:
-            self.response.out.write("キャッシュから{0}つの単語を削除しました.".format(cache_num))
-        else:
-            self.response.out.write("キャッシュから{0}の単語を削除しました.".format(cache_num))
-
 
 class TransHandler(webapp2.RequestHandler):
 
@@ -259,22 +182,9 @@ class TransHandler(webapp2.RequestHandler):
 
         self.response.out.write(resp_template)
 
-        userid = self.request.cookies.get('userid','')
-
-        if validate_userid(userid):
-            cache_query = Cache.query(ancestor=cache_key(userid)).order(-Cache.date)
-
-            if word not in [c.word for c in cache_query.fetch()]:
-                cache = Cache(parent=cache_key(userid))
-                cache.word = word
-                cache.put()
-
-
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
-    ('/trans',TransHandler),
-    ('/cache',CacheHandler),
-    ('/flush',FlushHandler)
+    ('/trans',TransHandler)
 ], debug=True)
 
 util.run_wsgi_app(app)

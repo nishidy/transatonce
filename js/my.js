@@ -221,31 +221,8 @@ function query(i,words,ncur,site){
 	);
 }
 
-function getCacheEntries(){
-    var req = new XMLHttpRequest();
-    req.onreadystatechange = function(){
-        if(req.readyState == 4 && req.status != 0){
-	        var text_elem = document.forms['trans'].elements['text'];
-            text_elem.value = req.responseText;
-        }
-    }
-    req.open("GET", '/cache', true);
-    req.send("");
-}
-
 function flushCacheEntries(){
     localStorage.clear();
-
-    var req = new XMLHttpRequest();
-    req.onreadystatechange = function(){
-        if(req.readyState == 4 && req.status != 0){
-            if(req.responseText!=""){
-                alert(req.responseText);
-            }
-        }
-    }
-    req.open("GET", '/flush', true);
-    req.send("");
 }
 
 function count(){
