@@ -269,6 +269,7 @@ class TransHandler(webapp2.RequestHandler):
                 cache.word = word
                 cache.put()
 
+
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/trans',TransHandler),

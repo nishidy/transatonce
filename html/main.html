@@ -15,7 +15,7 @@
 		</script>
 	</head>
 
-	<body>
+	<body onload="loadCache()">
 
 		<div id=onload_notice_toggle align=center style='color:white; background-color:blue; position:absolute; top:-10px; left:0; width:100%;' onmouseover='showNotice("onload_notice")' onclick='showNotice("onload_notice")'><br></div>
 
@@ -25,7 +25,7 @@
 			<textarea name=text rows=5 cols=20" onChange="count()" onClick="ask()"></textarea>
 			<br>
 			<input type=button name=input value="Trans" onClick="makeQueries()">
-			<input type=button name=input value="Cache" onClick="getCacheEntries()">
+            <!--<input type=button name=input value="Cache" onClick="getCacheEntries()">//-->
 			<input type=button name=input value="Flush" onClick="flushCacheEntries()">
 			<br>
 			<label><input type=radio name=site value=alc checked>alc</label>
