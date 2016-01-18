@@ -4,6 +4,7 @@ require "rspec"
 describe "transatonceのテスト" do
 
     before(:all) do 
+
         @data = ["driver", "学習", "at once"]
 
         @driver = Selenium::WebDriver.for :firefox
@@ -26,18 +27,30 @@ describe "transatonceのテスト" do
 
     it "翻訳した単語が表示される" do
         @driver.navigate.to "http://transatonce.appspot.com"
-
         textbox = @driver.find_element(:xpath, "//form/textarea")
         #puts textbox.methods
-
         expect(textbox.attribute("value")).to eq @data.join("\n")
     end
 
-    it "重複した単語は表示されない" do
-        newdata = ["redundant"]
+    it "追加した単語が表示される" do
+        newdata = ["newly"]
 
         @driver.navigate.to "http://transatonce.appspot.com"
+        textbox = @driver.find_element(:xpath, "//form/textarea")
+        textbox.clear()
+        textbox.send_keys(newdata.join(""))
+        @driver.find_element(:xpath, "//form/input[contains(@value,'Trans')]").click
 
+        @driver.navigate.to "http://transatonce.appspot.com"
+        textbox = @driver.find_element(:xpath, "//form/textarea")
+        expect(textbox.attribute("value")).to eq (@data+newdata).join("\n")
+    end
+
+
+    it "重複した単語は表示されない" do
+        newdata = ["newly","redundant"]
+
+        @driver.navigate.to "http://transatonce.appspot.com"
         textbox = @driver.find_element(:xpath, "//form/textarea")
         textbox.clear()
         textbox.send_keys((@data+newdata).join("\n"))
