@@ -133,7 +133,7 @@ class TransHandler(webapp2.RequestHandler):
         def doUrlFetch(word):
 
             try:
-                fetched = urlfetch.fetch(url[site]%word.replace(" ","%20"))
+                fetched = urlfetch.fetch(url[site]%word.replace(" ","%20"), deadline=10)
             except Exception as e:
                 logging.error(str(type(e))+" "+str(e.args))
                 raise e
@@ -148,7 +148,7 @@ class TransHandler(webapp2.RequestHandler):
                 else:
                     return parsed_result
             else:
-                raise Exception("Returned status code was not 200.");
+                raise Exception("Returned status code was not 200, %d."%(fetched.status_code));
 
 
         word = self.request.get('word')
