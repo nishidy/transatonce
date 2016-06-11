@@ -250,7 +250,12 @@ function query(i,words,ncur,site){
 }
 
 function flushCacheEntries(){
-    localStorage.clear();
+	var r = confirm("保存された単語を消去しますか?");
+	if (r == true) {
+        localStorage.clear();
+	} else {
+
+	}
 }
 
 function count(){
