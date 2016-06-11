@@ -15,14 +15,14 @@
 		</script>
 	</head>
 
-	<body onload="loadCache()">
+	<body onload="loadCache()" ondblclick="clearBox()">
 
 		<div id=onload_notice_toggle align=center style='color:white; background-color:blue; position:absolute; top:-10px; left:0; width:100%;' onmouseover='showNotice("onload_notice")' onclick='showNotice("onload_notice")'><br></div>
 
 		<br>
 
 		<form action="#" name=trans>
-			<textarea name=text rows=5 cols=20" onChange="count()" onClick="ask()"></textarea>
+			<textarea name=text rows=5 cols=20" onChange="count()"></textarea>
 			<br>
 			<input type=button name=input value="Trans" onClick="makeQueries()">
             <input type=button name=input value="Clear" onClick="flushCacheEntries()">
@@ -56,7 +56,8 @@
 			shooting star<br>
 			輝く<br>
 			<br>
-			ESCボタンで表示結果を全てクリアします.<br>
+			画面をダブルクリックするとボックスの中の単語を全てクリアします.<br>
+			ESCボタンで検索した結果を全てクリアします.<br>
 			<br>
 		</div>
 

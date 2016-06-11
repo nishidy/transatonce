@@ -299,3 +299,7 @@ function loadCache(){
     }
 }
 
+function clearBox(){
+	document.forms['trans'].elements['text'].value="";
+}
+
